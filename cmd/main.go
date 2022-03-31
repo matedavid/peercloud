@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"peercloud/core"
+)
 
 func main() {
-	fmt.Println("Hello world!")
+	filepath := "files/example.txt"
+	manifest := core.ShardFile(filepath)
+	fmt.Println(manifest)
 }
