@@ -49,11 +49,13 @@ func ShardFile(filepath string) *Manifest {
 		shardContent := append(buffer[:], filenameHash[:]...)
 		shardHash := crypto.HashSha256(shardContent)
 
-		err = saveShard(buffer[:n], shardHash)
+		shardHashString := crypto.HashAsString(shardHash)
+
+		err = saveShard(buffer[:n], shardHashString)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		manifest.Shards = append(manifest.Shards, shardHash)
+		manifest.Shards = append(manifest.Shards, shardHashString)
 	}
 
 	manifest.Hash = hashManifest(manifest)
