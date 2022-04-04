@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"peercloud/crypto"
 )
 
@@ -12,6 +13,19 @@ func main() {
 		fmt.Println(manifest)
 	*/
 
-	key := crypto.GenerateRSAKey()
-	fmt.Println(key.PublicKey)
+	key, err := crypto.GenerateRSAKey()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	testContent := []byte("This is a test message")
+	hash := crypto.HashSha256(testContent)
+
+	signature, err := crypto.SignMessage(hash, key)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	isValid := crypto.VerifyMessage(hash, signature, &key.PublicKey)
+	fmt.Println(isValid)
 }
