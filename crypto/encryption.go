@@ -9,9 +9,9 @@ import (
 )
 
 func Encrypt(content []byte, privKey *rsa.PrivateKey) ([]byte, error) {
-	privKeyHash := HashSha256(privKey.N.Bytes())
+	key := HashSha256(privKey.N.Bytes())
 
-	c, err := aes.NewCipher(privKeyHash)
+	c, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
@@ -30,4 +30,27 @@ func Encrypt(content []byte, privKey *rsa.PrivateKey) ([]byte, error) {
 
 	encryptedContent := gcm.Seal(nonce, nonce, content, nil)
 	return encryptedContent, nil
+}
+
+func Decrypt(encryptedContent []byte, privKey *rsa.PrivateKey) ([]byte, error) {
+	key := HashSha256(privKey.N.Bytes())
+
+	c, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(encryptedContent) < nonceSize {
+		return nil, err
+	}
+
+	nonce, encryptedContent := encryptedContent[:nonceSize], encryptedContent[nonceSize:]
+	content, err := gcm.Open(nil, nonce, encryptedContent, nil)
+	return content, err
 }
