@@ -1,6 +1,7 @@
 package core
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"io"
 	"log"
@@ -21,7 +22,7 @@ type Manifest struct {
 
 // Shards the file in the given filepath, saving the shards in the default path for shards
 // and returning a Manifest object, which is saved in the default path for manfiests
-func ShardFile(filepath string) *Manifest {
+func ShardFile(filepath string, key *rsa.PrivateKey) *Manifest {
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -45,13 +46,19 @@ func ShardFile(filepath string) *Manifest {
 			break
 		}
 
-		// TODO: Should add more information to the shardContent
-		shardContent := append(buffer[:], filenameHash[:]...)
+		// Compute hash identifier for the shard
+		shardContent := append(buffer[:], filenameHash[:]...) // TODO: Should add more information to the shardContent
 		shardHash := crypto.HashSha256(shardContent)
 
 		shardHashString := crypto.HashAsString(shardHash)
 
-		err = saveShard(buffer[:n], shardHashString)
+		// Encrypt content of the shard
+		encryptedBuffer, err := crypto.Encrypt(buffer[:n], key)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = saveShard(encryptedBuffer, shardHashString)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
