@@ -24,7 +24,7 @@ func GetRSAKey() (*rsa.PrivateKey, error) {
 	return nil, errors.New("")
 }
 
-// TODO: Should be in another file?
+// === TODO: Should be in another file? ===
 func SignMessage(hashedMessage []byte, key *rsa.PrivateKey) ([]byte, error) {
 	signature, err := rsa.SignPSS(rand.Reader, key, crypto.SHA256, hashedMessage, nil)
 	if err != nil {
@@ -41,3 +41,5 @@ func VerifyMessage(hashedMessage []byte, signature []byte, publKey *rsa.PublicKe
 	}
 	return err == nil
 }
+
+// =======

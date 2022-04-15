@@ -7,16 +7,14 @@ import (
 )
 
 func main() {
-	/*
-		filepath := "files/example.txt"
-		manifest := core.ShardFile(filepath)
-		fmt.Println(manifest)
-	*/
-
 	key, err := crypto.GenerateRSAKey()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	address := crypto.HashSha256(key.PublicKey.N.Bytes())
+	fmt.Println(key.PublicKey.N.Bytes(), len(key.PublicKey.N.Bytes()))
+	fmt.Println(address, len(address))
 
 	testContent := []byte("This is a test message")
 	hash := crypto.HashSha256(testContent)
@@ -26,6 +24,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	isValid := crypto.VerifyMessage(hash, signature, &key.PublicKey)
-	fmt.Println(isValid)
+	signatureValid := crypto.VerifyMessage(hash, signature, &key.PublicKey)
+	fmt.Println(signatureValid)
 }
