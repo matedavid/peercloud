@@ -47,9 +47,9 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 		}
 
 		// Compute hash identifier for the shard
-		shardContent := append(buffer[:], filenameHash[:]...) // TODO: Should add more information to the shardContent
-		shardHash := crypto.HashSha256(shardContent)
+		shardContent := append(buffer[:n], filenameHash...) // TODO: Should add more information to the shardContent
 
+		shardHash := crypto.HashSha256(shardContent)
 		shardHashString := crypto.HashAsString(shardHash)
 
 		// Encrypt content of the shard
@@ -75,11 +75,22 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 	return manifest, nil
 }
 
-/*^
 // Returns the content of a Shard
-func GetShard(hash string) (string, error) {
+func GetShard(hash string) ([]byte, error) {
+	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
+
+	file, err := os.Open(shardPath)
+	if err != nil {
+		return nil, err
+	}
+
+	content := make([]byte, 1024)
+	_, err = file.Read(content)
+
+	return content, err
 }
 
+/*
 // Returns if a shard exists
 func ShardExists(hash string) bool {
 }
@@ -129,7 +140,8 @@ func saveManifest(manifest *Manifest) error {
 
 // Returns the Hash of a given file using a Merkle Tree
 func hashManifest(manifest *Manifest) string {
-	shards := manifest.Shards
+	shards := make([]string, len(manifest.Shards))
+	copy(shards, manifest.Shards)
 
 	if len(shards)%2 != 0 {
 		shards = append(shards, "0")
@@ -141,8 +153,9 @@ func hashManifest(manifest *Manifest) string {
 		secondHash := shards[l-2]
 
 		combinedHash := firstHash + secondHash
-		shards = shards[:l-2]
+		combinedHash = crypto.HashAsString(crypto.HashSha256([]byte(combinedHash)))
 
+		shards = shards[:l-2]
 		shards = append(shards, combinedHash)
 	}
 
