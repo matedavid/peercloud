@@ -22,10 +22,10 @@ type Manifest struct {
 
 // Shards the file in the given filepath, saving the shards in the default path for shards
 // and returning a Manifest object, which is saved in the default path for manfiests
-func ShardFile(filepath string, key *rsa.PrivateKey) *Manifest {
+func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 	defer file.Close()
 
@@ -39,7 +39,7 @@ func ShardFile(filepath string, key *rsa.PrivateKey) *Manifest {
 	for {
 		n, err := file.Read(buffer)
 		if err != nil && err != io.EOF {
-			log.Fatal(err.Error())
+			return nil, err
 		}
 
 		if err == io.EOF {
@@ -55,12 +55,12 @@ func ShardFile(filepath string, key *rsa.PrivateKey) *Manifest {
 		// Encrypt content of the shard
 		encryptedBuffer, err := crypto.Encrypt(buffer[:n], key)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
 		err = saveShard(encryptedBuffer, shardHashString)
 		if err != nil {
-			log.Fatal(err.Error())
+			return nil, err
 		}
 		manifest.Shards = append(manifest.Shards, shardHashString)
 	}
@@ -72,10 +72,10 @@ func ShardFile(filepath string, key *rsa.PrivateKey) *Manifest {
 		log.Fatal(err.Error())
 	}
 
-	return manifest
+	return manifest, nil
 }
 
-/*
+/*^
 // Returns the content of a Shard
 func GetShard(hash string) (string, error) {
 }
