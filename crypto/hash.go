@@ -12,5 +12,5 @@ func HashSha256(content []byte) []byte {
 }
 
 func HashAsString(hash []byte) string {
-	return hex.EncodeToString(hash[:])
+	return hex.EncodeToString(hash)
 }
