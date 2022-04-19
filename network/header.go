@@ -1,6 +1,12 @@
 package network
 
-import "net"
+import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"log"
+	"net"
+)
 
 // Network codes
 const MAIN_NETWORK_CODE = 0xDD13
@@ -38,8 +44,21 @@ type MessageHeader struct {
 	Payload     uint32
 }
 
-func (*MessageHeader) Send(conn net.Conn) {
+func (mh *MessageHeader) Send(conn net.Conn) {
+	// Pack the struct
+	payload := &bytes.Buffer{}
+	err := binary.Write(payload, binary.LittleEndian, mh)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
+	// Send to other node
+	n, err := conn.Write(payload.Bytes())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Println("Sent:", n, "bytes")
 }
 
 func (*MessageHeader) Recv(conn net.Conn) {

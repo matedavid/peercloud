@@ -1,18 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"peercloud/core"
-	"peercloud/crypto"
 )
 
 func main() {
-	key, err := crypto.GenerateRSAKey()
-	if err != nil {
-		log.Fatal(err.Error())
+	if err := core.Upload("files/example.txt"); err != nil {
+		log.Fatal(err)
 	}
-
-	manifest := core.ShardFile("files/example.txt", key)
-	fmt.Println(manifest)
 }
