@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"net"
 )
 
@@ -44,32 +43,27 @@ type MessageHeader struct {
 	Payload     uint32
 }
 
-func (mh *MessageHeader) Send(conn net.Conn) {
+func (mh *MessageHeader) Send(conn net.Conn) error {
 	// Pack the struct
 	payload := &bytes.Buffer{}
 	err := binary.Write(payload, binary.LittleEndian, mh)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
 	// Send to other node
 	n, err := conn.Write(payload.Bytes())
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	fmt.Println("Sent:", n, "bytes")
+	return err
 }
 
-func (mh *MessageHeader) Recv(conn net.Conn) {
+func (mh *MessageHeader) Recv(conn net.Conn) error {
 	data := make([]byte, 20)
 	_, err := conn.Read(data)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
 	err = binary.Read(bytes.NewReader(data), binary.LittleEndian, mh)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	return err
 }

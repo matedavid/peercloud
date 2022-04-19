@@ -28,7 +28,10 @@ func main() {
 			Payload:     uint32(0),
 		}
 
-		header.Send(conn)
+		err = header.Send(conn)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	} else if os.Args[1] == "server" {
 		listener, err := net.Listen("tcp", "127.0.0.1:8000")
 		if err != nil {
@@ -41,7 +44,10 @@ func main() {
 			log.Fatal(err.Error())
 		}
 		header := &network.MessageHeader{}
-		header.Recv(conn)
+		err = header.Recv(conn)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 
 		fmt.Println(header)
 	}
