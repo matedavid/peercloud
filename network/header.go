@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strings"
 )
 
 // Network codes
@@ -18,6 +19,7 @@ const (
 	Verack
 	Store
 	Retrieve
+	Unknown
 )
 
 func NetworkCommandBytes(command NetworkCommand) [12]byte {
@@ -35,6 +37,22 @@ func NetworkCommandBytes(command NetworkCommand) [12]byte {
 	}
 
 	return byteCommand
+}
+
+func NetworkBytesAsCommand(byteCommand [12]byte) NetworkCommand {
+	strCommand := string(byteCommand[:])
+	strCommand = strings.Trim(strCommand, "\x00")
+
+	if strCommand == "version" {
+		return Version
+	} else if strCommand == "verack" {
+		return Verack
+	} else if strCommand == "store" {
+		return Store
+	} else if strCommand == "retrieve" {
+		return Retrieve
+	}
+	return Unknown
 }
 
 type MessageHeader struct {
