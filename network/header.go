@@ -61,5 +61,15 @@ func (mh *MessageHeader) Send(conn net.Conn) {
 	fmt.Println("Sent:", n, "bytes")
 }
 
-func (*MessageHeader) Recv(conn net.Conn) {
+func (mh *MessageHeader) Recv(conn net.Conn) {
+	data := make([]byte, 20)
+	_, err := conn.Read(data)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = binary.Read(bytes.NewReader(data), binary.LittleEndian, mh)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
