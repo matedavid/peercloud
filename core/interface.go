@@ -29,7 +29,7 @@ func Upload(filePath string) error {
 
 	header := &network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,
-		Command:     network.NetworkCommandBytes(network.Store),
+		Command:     network.Command2Bytes(network.Store),
 		Payload:     uint32(0),
 	}
 

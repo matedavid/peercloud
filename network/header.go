@@ -22,7 +22,7 @@ const (
 	Unknown
 )
 
-func NetworkCommandBytes(command NetworkCommand) [12]byte {
+func Command2Bytes(command NetworkCommand) [12]byte {
 	var byteCommand [12]byte
 
 	switch command {
@@ -39,7 +39,7 @@ func NetworkCommandBytes(command NetworkCommand) [12]byte {
 	return byteCommand
 }
 
-func NetworkBytesAsCommand(byteCommand [12]byte) NetworkCommand {
+func Bytes2Command(byteCommand [12]byte) NetworkCommand {
 	strCommand := string(byteCommand[:])
 	strCommand = strings.Trim(strCommand, "\x00")
 
@@ -76,12 +76,14 @@ func (mh *MessageHeader) Send(conn net.Conn) error {
 }
 
 func (mh *MessageHeader) Recv(conn net.Conn) error {
+	// Recieve header from connection
 	data := make([]byte, 20)
 	_, err := conn.Read(data)
 	if err != nil {
 		return err
 	}
 
+	// Unpack struct
 	err = binary.Read(bytes.NewReader(data), binary.LittleEndian, mh)
 	return err
 }
