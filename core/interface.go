@@ -63,6 +63,11 @@ func Upload(filePath string) error {
 		} else if header.Command != network.Stored {
 			return errors.New("did not receive stored message header")
 		}
+
+		err = RemoveTmpShard(shard)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

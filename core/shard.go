@@ -91,6 +91,26 @@ func GetShard(hash string) ([]byte, error) {
 	return content, err
 }
 
+func StoreShard(content []byte, hash string) error {
+	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
+
+	file, err := os.Create(shardPath)
+	if err != nil {
+		return err
+	}
+
+	file.Write(content)
+	file.Close()
+
+	return nil
+}
+
+func RemoveTmpShard(hash string) error {
+	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
+	err := os.Remove(shardPath)
+	return err
+}
+
 /*
 // Returns if a shard exists
 func ShardExists(hash string) bool {

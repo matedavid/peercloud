@@ -29,10 +29,14 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 
 	fmt.Println("Received payload of:", n, "bytes")
 
-	//hash := string(buff[:64])
-	//content := buff[64:]
+	hash := string(buff[:64])
+	content := buff[64:]
 
 	// TODO: Save shard
+	err = StoreShard(content, hash)
+	if err != nil {
+		return err
+	}
 
 	mh := network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,
