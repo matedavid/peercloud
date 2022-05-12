@@ -1,55 +1,37 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net"
+	"os"
+	"peercloud/core"
 	"peercloud/network"
 )
 
 func main() {
-	byteCommand := network.Command2Bytes(network.Version)
-	command := network.Bytes2Command(byteCommand)
-	fmt.Println(command)
-
-	/*
+	if os.Args[1] == "upload" {
 		if err := core.Upload("files/example.txt"); err != nil {
-			log.Fatal(err)
+			log.Fatal(err.Error())
 		}
+	} else if os.Args[1] == "store" {
+		listener, err := net.Listen("tcp", "localhost:8001")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		defer listener.Close()
 
-		if os.Args[1] == "client" {
-			conn, err := net.Dial("tcp", "127.0.0.1:8000")
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer conn.Close()
-
-			header := &network.MessageHeader{
-				NetworkCode: network.MAIN_NETWORK_CODE,
-				Command:     network.NetworkCommandBytes(network.Store),
-				Payload:     uint32(0),
-			}
-
-			err = header.Send(conn)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-		} else if os.Args[1] == "server" {
-			listener, err := net.Listen("tcp", "127.0.0.1:8000")
-			if err != nil {
-				log.Fatal(err)
-			}
-			defer listener.Close()
-
+		for {
 			conn, err := listener.Accept()
 			if err != nil {
 				log.Fatal(err.Error())
 			}
-			header := &network.MessageHeader{}
-			err = header.Recv(conn)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
+			defer conn.Close()
 
-			fmt.Println(header)
+			mh := network.MessageHeader{}
+			mh.Recv(conn)
+
+			core.Store(conn, mh)
 		}
-	*/
+
+	}
 }

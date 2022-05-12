@@ -1,56 +1,71 @@
 package core
 
 import (
-	"log"
+	"errors"
 	"net"
+	"peercloud/crypto"
 	"peercloud/network"
 )
 
 func Upload(filePath string) error {
-	/*
-		// TODO: This should get the node's key, not generate a new one
-		key, err := crypto.GenerateRSAKey()
-		if err != nil {
-			return err
-		}
-
-		manifest, err := ShardFile(filePath, key)
-		if err != nil {
-			return err
-		}
-	*/
-
-	// === Temporal ===
-	conn, err := net.Dial("tcp", "127.0.0.1:8000")
+	// TODO: This should get the node's key, not generate a new one
+	key, err := crypto.GenerateRSAKey()
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	header := &network.MessageHeader{
-		NetworkCode: network.MAIN_NETWORK_CODE,
-		Command:     network.Command2Bytes(network.Store),
-		Payload:     uint32(0),
+		return err
 	}
 
-	header.Send(conn)
+	manifest, err := ShardFile(filePath, key)
+	if err != nil {
+		return err
+	}
 
-	// === ===
-
-	/*
-		for _, shard := range manifest.Shards {
-			content, err := GetShard(shard)
-			if err != nil {
-				return err
-			}
-
-			header := network.MessageHeader{
-				network.MAIN_NETWORK_CODE,
-				network.NetworkCommandBytes(network.Store),
-				uint32(len(content)),
-			}
+	for _, shard := range manifest.Shards {
+		content, err := GetShard(shard)
+		if err != nil {
+			return err
 		}
-	*/
 
+		// TODO: Find suitable nodes
+		conn, err := net.Dial("tcp", "localhost:8001")
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		header := network.MessageHeader{
+			NetworkCode: network.MAIN_NETWORK_CODE,
+			Command:     network.Store,
+			Payload:     uint32(len(content)),
+		}
+
+		header.Send(conn)
+
+		// Wait for Acknowledge header
+		err = header.Recv(conn)
+		if err != nil {
+			return err
+		} else if header.Command != network.Acknowledge {
+			return errors.New("did not receive acknowledge message header")
+		}
+
+		// Send shard content
+		_, err = conn.Write(content)
+		if err != nil {
+			return err
+		}
+
+		// Wait for Stored header
+		err = header.Recv(conn)
+		if err != nil {
+			return err
+		} else if header.Command != network.Stored {
+			return errors.New("node did not return stored command")
+		}
+	}
+
+	return nil
+}
+
+func Download(manifest *Manifest) error {
 	return nil
 }
