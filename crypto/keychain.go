@@ -4,8 +4,10 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
+	"crypto/x509"
+	"encoding/pem"
 	"log"
+	"os"
 )
 
 // Generates a new RSA key pair
@@ -15,13 +17,45 @@ func GenerateRSAKey() (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
+	// Save key
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(key),
+		},
+	)
+
+	file, err := os.Create(".peercloud/privkey.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	file.Write(pemdata)
+	file.Close()
+
 	return key, nil
 }
 
 // Gets the already generated RSA key saved in the computer (if exists)
 func GetRSAKey() (*rsa.PrivateKey, error) {
-	// TODO: Not implemented
-	return nil, errors.New("")
+	file, err := os.Open(".peercloud/privkey.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	pemdata := make([]byte, 2048)
+	_, err = file.Read(pemdata)
+	if err != nil {
+		return nil, err
+	}
+
+	p, _ := pem.Decode(pemdata)
+	key, err := x509.ParsePKCS1PrivateKey(p.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }
 
 // === TODO: Should be in another file? ===
