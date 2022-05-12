@@ -35,7 +35,7 @@ func Upload(filePath string) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Store,
-			Payload:     uint32(len(content)),
+			Payload:     uint32(len(content) + 64), // +64 because sending shard
 		}
 
 		header.Send(conn)
@@ -49,7 +49,9 @@ func Upload(filePath string) error {
 		}
 
 		// Send shard content
-		_, err = conn.Write(content)
+		sendContent := append([]byte(shard), content...)
+
+		_, err = conn.Write(sendContent)
 		if err != nil {
 			return err
 		}
@@ -59,7 +61,7 @@ func Upload(filePath string) error {
 		if err != nil {
 			return err
 		} else if header.Command != network.Stored {
-			return errors.New("node did not return stored command")
+			return errors.New("did not receive stored message header")
 		}
 	}
 

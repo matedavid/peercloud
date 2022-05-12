@@ -24,10 +24,15 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 	if err != nil {
 		return err
 	} else if n != int(payload) {
-		return errors.New("received data size does not match payload")
+		return errors.New("length of data received does not match payload")
 	}
 
 	fmt.Println("Received payload of:", n, "bytes")
+
+	//hash := string(buff[:64])
+	//content := buff[64:]
+
+	// TODO: Save shard
 
 	mh := network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,

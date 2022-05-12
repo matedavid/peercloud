@@ -25,12 +25,15 @@ func main() {
 			if err != nil {
 				log.Fatal(err.Error())
 			}
-			defer conn.Close()
 
 			mh := network.MessageHeader{}
 			mh.Recv(conn)
 
-			core.Store(conn, mh)
+			if mh.Command == network.Store {
+				core.Store(conn, mh)
+			}
+
+			conn.Close()
 		}
 
 	}

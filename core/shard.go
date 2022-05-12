@@ -10,8 +10,9 @@ import (
 	"peercloud/crypto"
 )
 
-const DEFAULT_SHARD_PATH = ".peercloud/.tmp/"
+const DEFAULT_TMP_PATH = ".peercloud/.tmp/"
 const DEFAULT_MANIFEST_PATH = ".peercloud/.storage/"
+const DEFAULT_SHARD_PATH = ".peercloud/.shards/"
 
 type Manifest struct {
 	Hash      string
@@ -77,7 +78,7 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 
 // Returns the content of a Shard
 func GetShard(hash string) ([]byte, error) {
-	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
+	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
 
 	file, err := os.Open(shardPath)
 	if err != nil {
@@ -106,7 +107,7 @@ func ManifestExists(hash string) bool {
 
 // Saves the shard's content in the default path for shards
 func saveShard(content []byte, hash string) error {
-	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
+	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
 
 	file, err := os.Create(shardPath)
 	if err != nil {
