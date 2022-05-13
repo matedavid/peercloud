@@ -6,45 +6,42 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"io/ioutil"
 	"log"
 	"os"
 )
 
 // Generates a new RSA key pair
-func GenerateRSAKey() (*rsa.PrivateKey, error) {
+func GenerateRSAKey(save bool) (*rsa.PrivateKey, error) {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
 	}
 
-	// Save key
-	pemdata := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(key),
-		},
-	)
+	if save {
+		// Save key
+		pemdata := pem.EncodeToMemory(
+			&pem.Block{
+				Type:  "RSA PRIVATE KEY",
+				Bytes: x509.MarshalPKCS1PrivateKey(key),
+			},
+		)
 
-	file, err := os.Create(".peercloud/privkey.pem")
-	if err != nil {
-		return nil, err
+		file, err := os.Create("/home/david/workspace/go_peercloud/.peercloud/privkey.pem")
+		if err != nil {
+			return nil, err
+		}
+
+		file.Write(pemdata)
+		file.Close()
 	}
-
-	file.Write(pemdata)
-	file.Close()
 
 	return key, nil
 }
 
 // Gets the already generated RSA key saved in the computer (if exists)
 func GetRSAKey() (*rsa.PrivateKey, error) {
-	file, err := os.Open(".peercloud/privkey.pem")
-	if err != nil {
-		return nil, err
-	}
-
-	pemdata := make([]byte, 2048)
-	_, err = file.Read(pemdata)
+	pemdata, err := ioutil.ReadFile("/home/david/workspace/go_peercloud/.peercloud/privkey.pem")
 	if err != nil {
 		return nil, err
 	}
