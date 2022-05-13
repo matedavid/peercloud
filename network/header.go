@@ -18,6 +18,7 @@ const (
 	Store
 	Stored
 	Retrieve
+	Retrieved
 	Acknowledge
 	Unknown
 )
@@ -76,7 +77,7 @@ func (mh *MessageHeader) Send(conn net.Conn) error {
 
 func (mh *MessageHeader) Recv(conn net.Conn) error {
 	// Recieve header from connection
-	data := make([]byte, 20)
+	data := make([]byte, 12)
 	_, err := conn.Read(data)
 	if err != nil {
 		return err
