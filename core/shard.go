@@ -3,7 +3,9 @@ package core
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -53,13 +55,15 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 		shardHash := crypto.HashSha256(shardContent)
 		shardHashString := crypto.HashAsString(shardHash)
 
-		// Encrypt content of the shard
-		encryptedBuffer, err := crypto.Encrypt(buffer[:n], key)
-		if err != nil {
-			return nil, err
-		}
+		/*
+			// Encrypt content of the shard
+			encryptedBuffer, err := crypto.Encrypt(buffer[:n], key)
+			if err != nil {
+				return nil, err
+			}
+		*/
 
-		err = saveShard(encryptedBuffer, shardHashString)
+		err = saveShard(buffer[:n], shardHashString)
 		if err != nil {
 			return nil, err
 		}
@@ -76,21 +80,6 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 	return manifest, nil
 }
 
-// Returns the content of a Shard
-func GetShard(hash string) ([]byte, error) {
-	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
-
-	file, err := os.Open(shardPath)
-	if err != nil {
-		return nil, err
-	}
-
-	content := make([]byte, 1024)
-	_, err = file.Read(content)
-
-	return content, err
-}
-
 func StoreShard(content []byte, hash string) error {
 	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
 
@@ -99,10 +88,20 @@ func StoreShard(content []byte, hash string) error {
 		return err
 	}
 
-	file.Write(content)
+	n, _ := file.Write(content)
+	fmt.Println(n)
 	file.Close()
 
 	return nil
+}
+
+func RetrieveShard(hash string) ([]byte, error) {
+	return getShard(hash, DEFAULT_SHARD_PATH)
+}
+
+// Returns the content of a Shard
+func GetTmpShard(hash string) ([]byte, error) {
+	return getShard(hash, DEFAULT_TMP_PATH)
 }
 
 func RemoveTmpShard(hash string) error {
@@ -115,15 +114,41 @@ func RemoveTmpShard(hash string) error {
 // Returns if a shard exists
 func ShardExists(hash string) bool {
 }
+*/
 
 // Gets the Manifest object from storage
-func GetManifest(hash string) *Manifest {
+func GetManifest(hash string) (*Manifest, error) {
+	manifestPath := path.Join(DEFAULT_MANIFEST_PATH, hash)
+	manifestString, err := ioutil.ReadFile(manifestPath)
+	if err != nil {
+		return nil, err
+	}
+
+	manifest := &Manifest{}
+	err = json.Unmarshal(manifestString, manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
 }
 
+/*
 // Returns if a Manifest file exists
 func ManifestExists(hash string) bool {
 }
 */
+
+func getShard(hash string, from string) ([]byte, error) {
+	shardPath := path.Join(from, hash)
+
+	content, err := ioutil.ReadFile(shardPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return content, err
+}
 
 // Saves the shard's content in the default path for shards
 func saveShard(content []byte, hash string) error {
