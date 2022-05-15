@@ -51,7 +51,7 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 		}
 
 		// Compute hash identifier for the shard
-		shardContent := append(buffer[:n], filenameHash...) // TODO: Should add more information to the shardContent
+		shardContent := append(buffer[:n], filenameHash...) // TODO: Should add more information to the shardContent?
 
 		shardHash := crypto.HashSha256(shardContent)
 		shardHashString := crypto.HashAsString(shardHash)
@@ -96,15 +96,17 @@ func StoreShard(content []byte, hash string) error {
 	return nil
 }
 
+// Returns the content of a stored Shard
 func RetrieveShard(hash string) ([]byte, error) {
 	return getShard(hash, DEFAULT_SHARD_PATH)
 }
 
-// Returns the content of a Shard
+// Returns the content of a temporal Shard
 func GetTmpShard(hash string) ([]byte, error) {
 	return getShard(hash, DEFAULT_TMP_PATH)
 }
 
+// Removes a temporal Shard
 func RemoveTmpShard(hash string) error {
 	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
 	err := os.Remove(shardPath)
@@ -134,6 +136,7 @@ func GetManifest(hash string) (*Manifest, error) {
 	return manifest, nil
 }
 
+// Searchs all Manifest objects stored and returns the one that matches the given filename
 func SearchManifestFromName(name string) (*Manifest, error) {
 	files, err := ioutil.ReadDir(DEFAULT_MANIFEST_PATH)
 	if err != nil {
@@ -160,6 +163,7 @@ func ManifestExists(hash string) bool {
 }
 */
 
+// Gets the content of a Shard stored in the 'from' directory
 func getShard(hash string, from string) ([]byte, error) {
 	shardPath := path.Join(from, hash)
 
