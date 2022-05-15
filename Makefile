@@ -6,6 +6,9 @@ test: crypto/* core/* network/*
 build: 
 	go build ./cmd/main.go 
 
+run:
+	go run cmd/main.go
+
 clean:
 	rm main
 
