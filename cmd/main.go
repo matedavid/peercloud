@@ -19,17 +19,22 @@ func (l *RpcListener) Upload(filePath *string, reply *bool) error {
 	return nil
 }
 
-func (l *RpcListener) Download(fileName *string, reply *string) error {
-	manifest, err := core.SearchManifestFromName(*fileName)
+type DownloadArgs struct {
+	File       string
+	OutputPath string
+}
+
+func (l *RpcListener) Download(args *DownloadArgs, reply *string) error {
+	manifest, err := core.SearchManifestFromName(args.File)
 	if err != nil {
 		return err
 	}
 
-	err = core.Download(manifest)
+	err = core.Download(manifest, args.OutputPath)
 	if err != nil {
 		return err
 	}
-	*reply = ".peercloud/.tmp/example.txt"
+	*reply = args.OutputPath
 
 	return nil
 }
@@ -57,26 +62,6 @@ func main() {
 		fmt.Println(cfg.GetCompleteAddress())
 
 		rpcServer(cfg)
-	} else if os.Args[1] == "client" {
-		client, err := rpc.DialHTTP("tcp", "127.0.0.1:8000")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var reply bool
-		err = client.Call("RpcListener.Upload", "files/example.txt", &reply)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("Upload:", reply)
-
-		var dreply string
-		err = client.Call("RpcListener.Download", "example.txt", &dreply)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("Download:", dreply)
-
 	} else if os.Args[1] == "tcpServer" {
 		listener, err := net.Listen("tcp", "localhost:8001")
 		if err != nil {

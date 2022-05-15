@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net"
 	"os"
-	"path"
 	"peercloud/crypto"
 	"peercloud/network"
 )
@@ -73,7 +72,7 @@ func Upload(filePath string) error {
 	return nil
 }
 
-func Download(manifest *Manifest) error {
+func Download(manifest *Manifest, outputPath string) error {
 	/*
 		key, err := crypto.GetRSAKey()
 		if err != nil {
@@ -81,9 +80,9 @@ func Download(manifest *Manifest) error {
 		}
 	*/
 
-	filePath := path.Join(".peercloud/.tmp/", manifest.Filename)
+	//filePath := path.Join(".peercloud/.tmp/", manifest.Filename)
 
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
