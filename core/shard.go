@@ -3,6 +3,7 @@ package core
 import (
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -131,6 +132,26 @@ func GetManifest(hash string) (*Manifest, error) {
 	}
 
 	return manifest, nil
+}
+
+func SearchManifestFromName(name string) (*Manifest, error) {
+	files, err := ioutil.ReadDir(DEFAULT_MANIFEST_PATH)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		manifest, err := GetManifest(file.Name())
+		if err != nil {
+			return nil, err
+		}
+
+		if manifest.Filename == name {
+			return manifest, nil
+		}
+	}
+
+	return &Manifest{}, errors.New("manifest with given name does not exist")
 }
 
 /*
