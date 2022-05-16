@@ -16,7 +16,7 @@ type RpcListener int
 func (l *RpcListener) Upload(filePath *string, reply *bool) error {
 	err := core.Upload(*filePath)
 	*reply = err == nil
-	return nil
+	return err
 }
 
 type DownloadArgs struct {
@@ -55,13 +55,13 @@ func rpcServer(cfg *core.Config) {
 func main() {
 	if os.Args[1] == "server" {
 		cfg := &core.Config{
-			Address: "127.0.0.1",
+			Address: net.ParseIP("127.0.0.1"),
 			Port:    8000,
 		}
 
 		fmt.Println(cfg.GetCompleteAddress())
-
 		rpcServer(cfg)
+
 	} else if os.Args[1] == "tcpServer" {
 		listener, err := net.Listen("tcp", "localhost:8001")
 		if err != nil {
@@ -78,7 +78,9 @@ func main() {
 			mh := network.MessageHeader{}
 			mh.Recv(conn)
 
-			if mh.Command == network.Store {
+			if mh.Command == network.Version {
+				core.RecvVersion(conn, mh)
+			} else if mh.Command == network.Store {
 				core.Store(conn, mh)
 			} else if mh.Command == network.Retrieve {
 				if err := core.Retrieve(conn, mh); err != nil {

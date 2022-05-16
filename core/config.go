@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
+	"net"
 	"peercloud/crypto"
 )
 
 type Config struct {
-	Address string
+	Address net.IP
 	Port    uint32
 }
 
