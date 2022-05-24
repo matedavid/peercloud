@@ -2,14 +2,14 @@ package core
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"net"
 	"os"
 	"peercloud/network"
 )
 
 func Store(conn net.Conn, header network.MessageHeader) error {
-	fmt.Println("Store:", header)
+	log.Println("Store:", header)
 
 	payload := header.Payload
 
@@ -28,7 +28,7 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 		return errors.New("length of data received does not match payload")
 	}
 
-	fmt.Println("Received payload of:", n, "bytes")
+	log.Println("Received payload of:", n, "bytes")
 
 	hash := string(buff[:64])
 	content := buff[64:n]
@@ -53,7 +53,7 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 }
 
 func Retrieve(conn net.Conn, header network.MessageHeader) error {
-	fmt.Println("Retrieve:", header)
+	log.Println("Retrieve:", header)
 
 	ack := network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,
@@ -76,7 +76,7 @@ func Retrieve(conn net.Conn, header network.MessageHeader) error {
 
 	content, err := RetrieveShard(string(shardHash))
 	if err == os.ErrNotExist {
-		fmt.Println("Shard:", shardHash, "does not exist")
+		log.Println("Shard:", shardHash, "does not exist")
 		return err
 	} else if err != nil {
 		return err

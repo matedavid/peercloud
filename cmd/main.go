@@ -78,9 +78,7 @@ func main() {
 			mh := network.MessageHeader{}
 			mh.Recv(conn)
 
-			if mh.Command == network.Version {
-				core.RecvVersion(conn, mh)
-			} else if mh.Command == network.Store {
+			if mh.Command == network.Store {
 				core.Store(conn, mh)
 			} else if mh.Command == network.Retrieve {
 				if err := core.Retrieve(conn, mh); err != nil {

@@ -30,7 +30,6 @@ func Upload(filePath string) error {
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
 
 		// Send shard content
 		sendContent := append([]byte(shard), content...)
@@ -67,6 +66,8 @@ func Upload(filePath string) error {
 		if err != nil {
 			return err
 		}
+
+		conn.Close()
 	}
 
 	return nil
@@ -94,7 +95,6 @@ func Download(manifest *Manifest, outputPath string) error {
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
 
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
@@ -151,6 +151,7 @@ func Download(manifest *Manifest, outputPath string) error {
 		*/
 
 		file.Write(buff)
+		conn.Close()
 	}
 
 	return nil
