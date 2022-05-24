@@ -31,7 +31,7 @@ func Upload(filePath string) error {
 			return err
 		}
 
-		// Send shard content
+		// Send shard content (shard hash + shard content)
 		sendContent := append([]byte(shard), content...)
 
 		header := network.MessageHeader{
@@ -39,17 +39,13 @@ func Upload(filePath string) error {
 			Command:     network.Store,
 			Payload:     uint32(len(sendContent)), // This includes the size of the added shard
 		}
-		header.Send(conn)
-
-		// Wait for Acknowledge header
-		err = header.Recv(conn)
+		err = header.Send(conn)
 		if err != nil {
 			return err
-		} else if header.Command != network.Acknowledge {
-			return errors.New("did not receive acknowledge message header")
 		}
 
-		_, err = conn.Write(sendContent)
+		// Send shard content information
+		err = network.SendPayload(conn, sendContent)
 		if err != nil {
 			return err
 		}
@@ -103,15 +99,8 @@ func Download(manifest *Manifest, outputPath string) error {
 		}
 		header.Send(conn)
 
-		err = header.Recv(conn)
-		if err != nil {
-			return err
-		} else if header.Command != network.Acknowledge {
-			return errors.New("did not receive acknowledge message header")
-		}
-
-		// Send shard hash
-		_, err = conn.Write([]byte(shard))
+		// Send shard hash that we want to retrieve
+		err = network.SendPayload(conn, []byte(shard))
 		if err != nil {
 			return err
 		}
@@ -123,22 +112,9 @@ func Download(manifest *Manifest, outputPath string) error {
 			return errors.New("did not receive retrieved message header")
 		}
 
-		mh := network.MessageHeader{
-			NetworkCode: network.MAIN_NETWORK_CODE,
-			Command:     network.Acknowledge,
-			Payload:     0,
-		}
-		err = mh.Send(conn)
+		buff, err := network.ReceivePayload(conn, header.Payload)
 		if err != nil {
 			return err
-		}
-
-		buff := make([]byte, header.Payload)
-		n, err := conn.Read(buff)
-		if err != nil {
-			return err
-		} else if n != int(header.Payload) {
-			return errors.New("length of data received does not match payload")
 		}
 
 		/*
