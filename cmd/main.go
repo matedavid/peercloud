@@ -9,12 +9,15 @@ import (
 	"os"
 	"peercloud/core"
 	"peercloud/network"
+	"strconv"
 )
 
 type RpcListener int
 
+var cfg *core.Config
+
 func (l *RpcListener) Upload(filePath *string, reply *bool) error {
-	err := core.Upload(*filePath)
+	err := core.Upload(*filePath, cfg)
 	*reply = err == nil
 	return err
 }
@@ -25,7 +28,7 @@ type DownloadArgs struct {
 }
 
 func (l *RpcListener) Download(args *DownloadArgs, reply *string) error {
-	manifest, err := core.SearchManifestFromName(args.File)
+	manifest, err := core.SearchManifestFromName(args.File, cfg)
 	if err != nil {
 		return err
 	}
@@ -52,41 +55,52 @@ func rpcServer(cfg *core.Config) {
 	http.Serve(listener, nil)
 }
 
-func main() {
-	if os.Args[1] == "server" {
-		cfg := &core.Config{
-			Address: net.ParseIP("127.0.0.1"),
-			Port:    8000,
-		}
+func tcpServer(tcpCfg *core.Config) {
+	listener, err := net.Listen("tcp", tcpCfg.GetCompleteAddress())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer listener.Close()
 
-		fmt.Println(cfg.GetCompleteAddress())
-		rpcServer(cfg)
-
-	} else if os.Args[1] == "tcpServer" {
-		listener, err := net.Listen("tcp", "localhost:8001")
+	for {
+		conn, err := listener.Accept()
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		defer listener.Close()
 
-		for {
-			conn, err := listener.Accept()
-			if err != nil {
-				log.Fatal(err.Error())
+		mh := network.MessageHeader{}
+		mh.Recv(conn)
+
+		if mh.Command == network.Store {
+			core.Store(conn, mh, cfg)
+		} else if mh.Command == network.Retrieve {
+			if err := core.Retrieve(conn, mh, cfg); err != nil {
+				log.Fatal(err)
 			}
-
-			mh := network.MessageHeader{}
-			mh.Recv(conn)
-
-			if mh.Command == network.Store {
-				core.Store(conn, mh)
-			} else if mh.Command == network.Retrieve {
-				if err := core.Retrieve(conn, mh); err != nil {
-					log.Fatal(err)
-				}
-			}
-
-			conn.Close()
 		}
+
+		conn.Close()
 	}
+}
+
+func main() {
+	ip := os.Args[1]
+	port, err := strconv.Atoi(os.Args[2])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cfg = &core.Config{
+		Address: net.ParseIP(ip),
+		Port:    uint32(port),
+	}
+	tcpCfg := &core.Config{
+		Address: net.ParseIP(ip),
+		Port:    uint32(port + 1),
+	}
+
+	fmt.Println(cfg.GetCompleteAddress(), "-", cfg.GetNodeIdentifier())
+
+	go rpcServer(cfg)
+	tcpServer(tcpCfg)
 }

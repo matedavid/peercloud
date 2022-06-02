@@ -7,7 +7,7 @@ import (
 	"peercloud/network"
 )
 
-func Store(conn net.Conn, header network.MessageHeader) error {
+func Store(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 	log.Println("Store:", header)
 
 	buff, err := network.ReceivePayload(conn, header.Payload)
@@ -20,7 +20,7 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 	hash := string(buff[:64])
 	content := buff[64:]
 
-	err = StoreShard(content, hash)
+	err = StoreShard(content, hash, cfg)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func Store(conn net.Conn, header network.MessageHeader) error {
 	return mh.Send(conn)
 }
 
-func Retrieve(conn net.Conn, header network.MessageHeader) error {
+func Retrieve(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 	log.Println("Retrieve:", header)
 
 	// Receive shard hash
@@ -43,7 +43,7 @@ func Retrieve(conn net.Conn, header network.MessageHeader) error {
 		return err
 	}
 
-	content, err := RetrieveShard(string(shardHash))
+	content, err := RetrieveShard(string(shardHash), cfg)
 	if err == os.ErrNotExist {
 		log.Println("Shard:", shardHash, "does not exist")
 		return err

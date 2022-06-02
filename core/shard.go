@@ -13,9 +13,27 @@ import (
 	"peercloud/crypto"
 )
 
+// TEMPORAL: Should use constants
+
+func getTmpPath(cfg *Config) string {
+	return ".peercloud/" + cfg.GetCompleteAddress() + "/.tmp/"
+}
+
+func getManifestPath(cfg *Config) string {
+	return ".peercloud/" + cfg.GetCompleteAddress() + "/.storage/"
+}
+
+func getShardPath(cfg *Config) string {
+	return ".peercloud/" + cfg.GetCompleteAddress() + "/.shards/"
+}
+
+////  ///// ////
+
+/*
 const DEFAULT_TMP_PATH = ".peercloud/.tmp/"
 const DEFAULT_MANIFEST_PATH = ".peercloud/.storage/"
 const DEFAULT_SHARD_PATH = ".peercloud/.shards/"
+*/
 
 type Manifest struct {
 	Hash      string
@@ -26,7 +44,7 @@ type Manifest struct {
 
 // Shards the file in the given filepath, saving the shards in the default path for shards
 // and returning a Manifest object, which is saved in the default path for manfiests
-func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
+func ShardFile(filepath string, key *rsa.PrivateKey, cfg *Config) (*Manifest, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -64,7 +82,7 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 			}
 		*/
 
-		err = saveShard(buffer[:n], shardHashString)
+		err = saveShard(buffer[:n], shardHashString, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +91,7 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 
 	manifest.Hash = hashManifest(manifest)
 
-	err = saveManifest(manifest)
+	err = saveManifest(manifest, cfg)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -81,8 +99,8 @@ func ShardFile(filepath string, key *rsa.PrivateKey) (*Manifest, error) {
 	return manifest, nil
 }
 
-func StoreShard(content []byte, hash string) error {
-	shardPath := path.Join(DEFAULT_SHARD_PATH, hash)
+func StoreShard(content []byte, hash string, cfg *Config) error {
+	shardPath := path.Join(getShardPath(cfg), hash)
 
 	file, err := os.Create(shardPath)
 	if err != nil {
@@ -97,18 +115,18 @@ func StoreShard(content []byte, hash string) error {
 }
 
 // Returns the content of a stored Shard
-func RetrieveShard(hash string) ([]byte, error) {
-	return getShard(hash, DEFAULT_SHARD_PATH)
+func RetrieveShard(hash string, cfg *Config) ([]byte, error) {
+	return getShard(hash, getShardPath(cfg))
 }
 
 // Returns the content of a temporal Shard
-func GetTmpShard(hash string) ([]byte, error) {
-	return getShard(hash, DEFAULT_TMP_PATH)
+func GetTmpShard(hash string, cfg *Config) ([]byte, error) {
+	return getShard(hash, getTmpPath(cfg))
 }
 
 // Removes a temporal Shard
-func RemoveTmpShard(hash string) error {
-	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
+func RemoveTmpShard(hash string, cfg *Config) error {
+	shardPath := path.Join(getTmpPath(cfg), hash)
 	err := os.Remove(shardPath)
 	return err
 }
@@ -120,8 +138,8 @@ func ShardExists(hash string) bool {
 */
 
 // Gets the Manifest object from storage
-func GetManifest(hash string) (*Manifest, error) {
-	manifestPath := path.Join(DEFAULT_MANIFEST_PATH, hash)
+func GetManifest(hash string, cfg *Config) (*Manifest, error) {
+	manifestPath := path.Join(getManifestPath(cfg), hash)
 	manifestString, err := ioutil.ReadFile(manifestPath)
 	if err != nil {
 		return nil, err
@@ -137,14 +155,14 @@ func GetManifest(hash string) (*Manifest, error) {
 }
 
 // Searchs all Manifest objects stored and returns the one that matches the given filename
-func SearchManifestFromName(name string) (*Manifest, error) {
-	files, err := ioutil.ReadDir(DEFAULT_MANIFEST_PATH)
+func SearchManifestFromName(name string, cfg *Config) (*Manifest, error) {
+	files, err := ioutil.ReadDir(getManifestPath(cfg))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, file := range files {
-		manifest, err := GetManifest(file.Name())
+		manifest, err := GetManifest(file.Name(), cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -176,8 +194,8 @@ func getShard(hash string, from string) ([]byte, error) {
 }
 
 // Saves the shard's content in the default path for shards
-func saveShard(content []byte, hash string) error {
-	shardPath := path.Join(DEFAULT_TMP_PATH, hash)
+func saveShard(content []byte, hash string, cfg *Config) error {
+	shardPath := path.Join(getTmpPath(cfg), hash)
 
 	file, err := os.Create(shardPath)
 	if err != nil {
@@ -191,13 +209,13 @@ func saveShard(content []byte, hash string) error {
 }
 
 // Saves a Manifest object in the default path for manifests
-func saveManifest(manifest *Manifest) error {
+func saveManifest(manifest *Manifest, cfg *Config) error {
 	manifestJSON, err := json.Marshal(manifest)
 	if err != nil {
 		return err
 	}
 
-	manifestPath := path.Join(DEFAULT_MANIFEST_PATH, manifest.Hash)
+	manifestPath := path.Join(getManifestPath(cfg), manifest.Hash)
 	file, err := os.Create(manifestPath)
 	if err != nil {
 		return err

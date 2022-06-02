@@ -8,25 +8,34 @@ import (
 	"peercloud/network"
 )
 
-func Upload(filePath string) error {
-	key, err := crypto.GetRSAKey()
+func Upload(filePath string, cfg *Config) error {
+	/*
+		key, err := crypto.GetRSAKey()
+		if err != nil {
+			return err
+		}
+	*/
+
+	// TEMPORAL: Should use GetRSAKey()
+	key, err := crypto.GenerateRSAKey(false)
 	if err != nil {
 		return err
 	}
+	///    ///    ////
 
-	manifest, err := ShardFile(filePath, key)
+	manifest, err := ShardFile(filePath, key, cfg)
 	if err != nil {
 		return err
 	}
 
 	for _, shard := range manifest.Shards {
-		content, err := GetTmpShard(shard)
+		content, err := GetTmpShard(shard, cfg)
 		if err != nil {
 			return err
 		}
 
 		// TODO: Find suitable nodes
-		conn, err := net.Dial("tcp", "localhost:8001")
+		conn, err := net.Dial("tcp", "localhost:8003")
 		if err != nil {
 			return err
 		}
@@ -58,7 +67,7 @@ func Upload(filePath string) error {
 			return errors.New("did not receive stored message header")
 		}
 
-		err = RemoveTmpShard(shard)
+		err = RemoveTmpShard(shard, cfg)
 		if err != nil {
 			return err
 		}
@@ -87,7 +96,7 @@ func Download(manifest *Manifest, outputPath string) error {
 
 	for _, shard := range manifest.Shards {
 		// TODO: Find suitable nodes
-		conn, err := net.Dial("tcp", "localhost:8001")
+		conn, err := net.Dial("tcp", "localhost:8003")
 		if err != nil {
 			return err
 		}
