@@ -10,17 +10,13 @@ import (
 func Store(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 	log.Println("Store:", header)
 
-	buff, err := network.ReceivePayload(conn, header.Payload)
+	data := network.UploadPayload{}
+	err := network.ReceivePayload(conn, header.Payload, &data)
 	if err != nil {
 		return err
 	}
 
-	log.Println("Received payload of:", len(buff), "bytes")
-
-	hash := string(buff[:64])
-	content := buff[64:]
-
-	err = StoreShard(content, hash, cfg)
+	err = StoreShard(data.Content, data.Hash, cfg)
 	if err != nil {
 		return err
 	}
@@ -38,14 +34,15 @@ func Retrieve(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 	log.Println("Retrieve:", header)
 
 	// Receive shard hash
-	shardHash, err := network.ReceivePayload(conn, header.Payload)
+	data := network.DownloadPayload{}
+	err := network.ReceivePayload(conn, header.Payload, &data)
 	if err != nil {
 		return err
 	}
 
-	content, err := RetrieveShard(string(shardHash), cfg)
+	content, err := RetrieveShard(data.Hash, cfg)
 	if err == os.ErrNotExist {
-		log.Println("Shard:", shardHash, "does not exist")
+		log.Println("Shard:", data.Hash, "does not exist")
 		return err
 	} else if err != nil {
 		return err
@@ -61,5 +58,8 @@ func Retrieve(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 		return err
 	}
 
-	return network.SendPayload(conn, content)
+	payload := network.GenericPayload{
+		Content: content,
+	}
+	return network.SendPayload(conn, &payload)
 }

@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-func SendPayload(conn net.Conn, content []byte) error {
+func SendPayload(conn net.Conn, m Model) error {
 	mh := MessageHeader{}
 
 	// Receive acknowledge message header
@@ -17,15 +17,17 @@ func SendPayload(conn net.Conn, content []byte) error {
 	}
 
 	// Send content
+	content := m.Write()
 	_, err = conn.Write(content)
 	if err != nil {
 		return err
 	}
 
 	return nil
+
 }
 
-func ReceivePayload(conn net.Conn, payload uint32) ([]byte, error) {
+func ReceivePayload(conn net.Conn, payload uint32, m Model) error {
 	// Send acknowledge message header
 	ack := MessageHeader{
 		NetworkCode: MAIN_NETWORK_CODE,
@@ -34,17 +36,18 @@ func ReceivePayload(conn net.Conn, payload uint32) ([]byte, error) {
 	}
 	err := ack.Send(conn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Receive data
 	buff := make([]byte, payload)
 	n, err := conn.Read(buff)
 	if err != nil {
-		return nil, err
+		return err
 	} else if n != int(payload) {
-		return nil, errors.New("length of data received does not match payload")
+		return errors.New("length of data received does not match payload")
 	}
 
-	return buff, nil
+	m.Read(buff)
+	return nil
 }

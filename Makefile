@@ -10,5 +10,5 @@ run:
 	go run cmd/main.go
 
 clean:
-	rm main .peercloud/.shards/* .peercloud/.tmp/* .peercloud/.storage/*
+	rm main && rm -rf .peercloud/
 

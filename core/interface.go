@@ -41,12 +41,16 @@ func Upload(filePath string, cfg *Config) error {
 		}
 
 		// Send shard content (shard hash + shard content)
-		sendContent := append([]byte(shard), content...)
+		payload := network.UploadPayload{
+			Hash:    shard,
+			Content: content,
+		}
 
+		// Send Store Header
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Store,
-			Payload:     uint32(len(sendContent)), // This includes the size of the added shard
+			Payload:     uint32(len(payload.Write())),
 		}
 		err = header.Send(conn)
 		if err != nil {
@@ -54,7 +58,7 @@ func Upload(filePath string, cfg *Config) error {
 		}
 
 		// Send shard content information
-		err = network.SendPayload(conn, sendContent)
+		err = network.SendPayload(conn, &payload)
 		if err != nil {
 			return err
 		}
@@ -104,12 +108,16 @@ func Download(manifest *Manifest, outputPath string) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Retrieve,
-			Payload:     64,
+			Payload:     64, // The length of hash in []byte
 		}
 		header.Send(conn)
 
+		payload := network.DownloadPayload{
+			Hash: shard,
+		}
+
 		// Send shard hash that we want to retrieve
-		err = network.SendPayload(conn, []byte(shard))
+		err = network.SendPayload(conn, &payload)
 		if err != nil {
 			return err
 		}
@@ -121,7 +129,8 @@ func Download(manifest *Manifest, outputPath string) error {
 			return errors.New("did not receive retrieved message header")
 		}
 
-		buff, err := network.ReceivePayload(conn, header.Payload)
+		content := network.GenericPayload{}
+		err = network.ReceivePayload(conn, header.Payload, &content)
 		if err != nil {
 			return err
 		}
@@ -135,7 +144,7 @@ func Download(manifest *Manifest, outputPath string) error {
 			file.Write(decryptedContent)
 		*/
 
-		file.Write(buff)
+		file.Write(content.Content)
 		conn.Close()
 	}
 
