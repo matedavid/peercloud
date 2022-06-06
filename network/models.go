@@ -31,7 +31,7 @@ type DownloadPayload struct {
 type VersionPayload struct {
 	Timestamp  int64
 	Address    net.IP
-	Port       uint32
+	Port       uint16
 	Identifier string
 }
 

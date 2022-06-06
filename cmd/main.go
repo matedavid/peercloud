@@ -71,14 +71,21 @@ func tcpServer(tcpCfg *core.Config) {
 		mh := network.MessageHeader{}
 		mh.Recv(conn)
 
-		if mh.Command == network.Store {
-			core.Store(conn, mh, cfg)
-		} else if mh.Command == network.Retrieve {
+		switch mh.Command {
+		case network.Store: // Store
+			if err := core.Store(conn, mh, cfg); err != nil {
+				log.Fatal(err)
+			}
+		case network.Retrieve: // Retrieve
 			if err := core.Retrieve(conn, mh, cfg); err != nil {
 				log.Fatal(err)
 			}
-		}
+		case network.Version: // Version
+			if err := core.RecvVersion(conn, mh); err != nil {
+				log.Fatal(err)
+			}
 
+		}
 		conn.Close()
 	}
 }
@@ -92,11 +99,11 @@ func main() {
 
 	cfg = &core.Config{
 		Address: net.ParseIP(ip),
-		Port:    uint32(port),
+		Port:    uint16(port),
 	}
 	tcpCfg := &core.Config{
 		Address: net.ParseIP(ip),
-		Port:    uint32(port + 1),
+		Port:    uint16(port + 1),
 	}
 
 	fmt.Println(cfg.GetCompleteAddress(), "-", cfg.GetNodeIdentifier())

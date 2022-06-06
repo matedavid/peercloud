@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Address net.IP
-	Port    uint32
+	Port    uint16
 }
 
 func (c *Config) GetCompleteAddress() string {

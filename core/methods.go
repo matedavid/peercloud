@@ -1,11 +1,67 @@
 package core
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"peercloud/network"
+	"time"
 )
+
+func SendVersion(conn net.Conn, cfg *Config) error {
+	version := network.VersionPayload{
+		Timestamp:  time.Now().Unix(),
+		Address:    cfg.Address,
+		Port:       cfg.Port,
+		Identifier: cfg.GetNodeIdentifier(),
+	}
+
+	header := network.MessageHeader{
+		NetworkCode: network.MAIN_NETWORK_CODE,
+		Command:     network.Version,
+		Payload:     uint32(len(version.Write())),
+	}
+	err := header.Send(conn)
+	if err != nil {
+		return err
+	}
+
+	// Send version payload
+	err = network.SendPayload(conn, &version)
+	if err != nil {
+		return err
+	}
+
+	// Recv Verack command
+	err = header.Recv(conn)
+	if err != nil {
+		return err
+	} else if header.Command != network.Verack {
+		return errors.New("did not receive 'verack' header command")
+	}
+	return nil
+}
+
+func RecvVersion(conn net.Conn, header network.MessageHeader) error {
+	versionInfo := network.VersionPayload{}
+	err := network.ReceivePayload(conn, header.Payload, &versionInfo)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Do something with the versionInfo
+	fmt.Println("Version:", versionInfo)
+
+	verack := network.MessageHeader{
+		NetworkCode: network.MAIN_NETWORK_CODE,
+		Command:     network.Verack,
+		Payload:     0,
+	}
+
+	return verack.Send(conn)
+}
 
 func Store(conn net.Conn, header network.MessageHeader, cfg *Config) error {
 	log.Println("Store:", header)
