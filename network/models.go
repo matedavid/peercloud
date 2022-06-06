@@ -11,6 +11,16 @@ type GenericPayload struct {
 	Content []byte
 }
 
+type UploadPayload struct {
+	Hash    string
+	Content []byte
+}
+
+type DownloadPayload struct {
+	Hash string
+}
+
+// GenericPayload
 func (p *GenericPayload) Write() []byte {
 	return p.Content
 }
@@ -19,11 +29,7 @@ func (p *GenericPayload) Read(data []byte) {
 	p.Content = data
 }
 
-type UploadPayload struct {
-	Hash    string
-	Content []byte
-}
-
+// UploadPayload
 func (p *UploadPayload) Write() []byte {
 	return append([]byte(p.Hash), p.Content...)
 }
@@ -33,10 +39,7 @@ func (p *UploadPayload) Read(data []byte) {
 	p.Content = data[64:]
 }
 
-type DownloadPayload struct {
-	Hash string
-}
-
+// DownloadPayload
 func (p *DownloadPayload) Write() []byte {
 	return []byte(p.Hash)
 }
