@@ -4,14 +4,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"peercloud/crypto"
 	"strconv"
 	"strings"
 )
 
+// ===== Should mode to models.go? ======
 type Host struct {
-	address net.IP
-	port    uint32
+	Address net.IP
+	Port    uint16
 }
+
+func (h *Host) GetCompleteAddress() string {
+	return fmt.Sprintf("%s:%d", h.Address, h.Port)
+}
+
+func (h *Host) GetNodeIdentifier() string {
+	ip := h.GetCompleteAddress()
+
+	identifier := crypto.HashSha256([]byte(ip))
+	return crypto.HashAsString(identifier)
+}
+
+// ==============================
 
 // TEMPORAL: Should use constants
 
@@ -56,14 +71,14 @@ func GetHosts(completeAddress string) ([]Host, error) {
 			return nil, err
 		}
 
-		cleanHosts = append(cleanHosts, Host{address, uint32(port)})
+		cleanHosts = append(cleanHosts, Host{address, uint16(port)})
 	}
 
 	return cleanHosts, nil
 }
 
 // Adds a new host (address:port) to the list of known hosts
-func AddHost(address net.IP, port uint32, completeAddress string) error {
+func AddHost(address net.IP, port uint16, completeAddress string) error {
 	hosts, err := GetHosts(completeAddress)
 	if err != nil {
 		return err
@@ -74,7 +89,7 @@ func AddHost(address net.IP, port uint32, completeAddress string) error {
 		// If host already exists, do nothing
 		// Could return error, but seems unnecessary given that it just means that it shouldn't
 		// be added again.
-		if h.address.String() == newHost.address.String() && h.port == newHost.port {
+		if h.Address.String() == newHost.Address.String() && h.Port == newHost.Port {
 			return nil
 		}
 	}
@@ -88,7 +103,7 @@ func saveHosts(hosts []Host, completeAddress string) error {
 
 	var data string
 	for _, host := range hosts {
-		data += fmt.Sprintf("%s:%d\n", host.address.String(), host.port)
+		data += fmt.Sprintf("%s:%d\n", host.Address.String(), host.Port)
 	}
 
 	return ioutil.WriteFile(path, []byte(data), 0644)

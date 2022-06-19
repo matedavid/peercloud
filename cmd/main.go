@@ -47,7 +47,7 @@ func rpcServer(cfg *core.Config) {
 	rpc.Register(rpcListener)
 	rpc.HandleHTTP()
 
-	listener, err := net.Listen("tcp", cfg.GetCompleteAddress())
+	listener, err := net.Listen("tcp", cfg.Node.GetCompleteAddress())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func rpcServer(cfg *core.Config) {
 }
 
 func tcpServer(tcpCfg *core.Config) {
-	listener, err := net.Listen("tcp", tcpCfg.GetCompleteAddress())
+	listener, err := net.Listen("tcp", tcpCfg.Node.GetCompleteAddress())
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -98,15 +98,19 @@ func main() {
 	}
 
 	cfg = &core.Config{
-		Address: net.ParseIP(ip),
-		Port:    uint16(port),
+		Node: network.Host{
+			Address: net.ParseIP(ip),
+			Port:    uint16(port),
+		},
 	}
 	tcpCfg := &core.Config{
-		Address: net.ParseIP(ip),
-		Port:    uint16(port + 1),
+		Node: network.Host{
+			Address: net.ParseIP(ip),
+			Port:    uint16(port + 1),
+		},
 	}
 
-	fmt.Println(cfg.GetCompleteAddress(), "-", cfg.GetNodeIdentifier())
+	fmt.Println(cfg.Node.GetCompleteAddress(), "-", cfg.Node.GetNodeIdentifier())
 
 	go rpcServer(cfg)
 	tcpServer(tcpCfg)

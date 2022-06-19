@@ -13,9 +13,9 @@ import (
 func SendVersion(conn net.Conn, cfg *Config) error {
 	version := network.VersionPayload{
 		Timestamp:  time.Now().Unix(),
-		Address:    cfg.Address,
-		Port:       cfg.Port,
-		Identifier: cfg.GetNodeIdentifier(),
+		Address:    cfg.Node.Address,
+		Port:       cfg.Node.Port,
+		Identifier: cfg.Node.GetNodeIdentifier(),
 	}
 
 	header := network.MessageHeader{
