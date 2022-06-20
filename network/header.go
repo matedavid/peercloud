@@ -43,7 +43,7 @@ func (mh *MessageHeader) Send(conn net.Conn) error {
 }
 
 func (mh *MessageHeader) Recv(conn net.Conn) error {
-	// Recieve header from connection
+	// Receive header from connection
 	data := make([]byte, 12)
 	_, err := conn.Read(data)
 	if err != nil {
