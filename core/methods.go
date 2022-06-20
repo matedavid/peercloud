@@ -4,19 +4,28 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"peercloud/network"
 	"time"
 )
 
+func generateRandomNumber(seed int64) uint32 {
+	source := rand.NewSource(seed)
+	return rand.New(source).Uint32()
+}
+
 func SendVersion(conn net.Conn, cfg *Config) error {
+	currentTime := time.Now().Unix()
+	randomNumber := generateRandomNumber(currentTime)
+
 	version := network.VersionPayload{
-		Timestamp:  time.Now().Unix(),
-		Address:    cfg.Node.Address,
-		Port:       cfg.Node.Port,
-		Identifier: cfg.Node.GetNodeIdentifier(),
+		Timestamp:    currentTime,
+		RandomNumber: randomNumber,
 	}
+
+	fmt.Println(version.Write())
 
 	header := network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,
@@ -27,6 +36,8 @@ func SendVersion(conn net.Conn, cfg *Config) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Before send:", version)
 
 	// Send version payload
 	err = network.SendPayload(conn, &version)
@@ -41,6 +52,20 @@ func SendVersion(conn net.Conn, cfg *Config) error {
 	} else if header.Command != network.Verack {
 		return errors.New("did not receive 'verack' header command")
 	}
+
+	// Receive verack VersionInfo response
+	verack := network.VersionPayload{}
+	err = network.ReceivePayload(conn, header.Payload, &verack)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("SendVersion:", verack)
+
+	if verack.Timestamp < currentTime || verack.RandomNumber-1 != randomNumber {
+		return errors.New("verack information does not match with sent version command")
+	}
+
 	return nil
 }
 
@@ -51,16 +76,26 @@ func RecvVersion(conn net.Conn, header network.MessageHeader) error {
 		return err
 	}
 
-	// TODO: Do something with the versionInfo
-	fmt.Println("Version:", versionInfo)
+	fmt.Println("versionInfo:", versionInfo)
+
+	verackInfo := network.VersionPayload{
+		Timestamp:    time.Now().Unix(),
+		RandomNumber: versionInfo.RandomNumber + 1,
+	}
+
+	fmt.Println("RecvVersion:", versionInfo)
 
 	verack := network.MessageHeader{
 		NetworkCode: network.MAIN_NETWORK_CODE,
 		Command:     network.Verack,
-		Payload:     0,
+		Payload:     uint32(len(verackInfo.Write())),
+	}
+	err = verack.Send(conn)
+	if err != nil {
+		return err
 	}
 
-	return verack.Send(conn)
+	return network.SendPayload(conn, &verackInfo)
 }
 
 func Store(conn net.Conn, header network.MessageHeader, cfg *Config) error {
