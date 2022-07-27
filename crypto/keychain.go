@@ -27,7 +27,7 @@ func GenerateRSAKey(save bool) (*rsa.PrivateKey, error) {
 			},
 		)
 
-		file, err := os.Create("/home/david/workspace/go_peercloud/.peercloud/privkey.pem")
+		file, err := os.Create(".peercloud/privkey.pem")
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,7 @@ func GenerateRSAKey(save bool) (*rsa.PrivateKey, error) {
 
 // Gets the already generated RSA key saved in the computer (if exists)
 func GetRSAKey() (*rsa.PrivateKey, error) {
-	pemdata, err := ioutil.ReadFile("/home/david/workspace/go_peercloud/.peercloud/privkey.pem")
+	pemdata, err := ioutil.ReadFile(".peercloud/privkey.pem")
 	if err != nil {
 		return nil, err
 	}

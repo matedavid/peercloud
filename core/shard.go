@@ -16,15 +16,15 @@ import (
 // TEMPORAL: Should use constants
 
 func getTmpPath(cfg *Config) string {
-	return ".peercloud/" + cfg.Node.GetCompleteAddress() + "/.tmp/"
+	return cfg.Path + "/.tmp/"
 }
 
 func getManifestPath(cfg *Config) string {
-	return ".peercloud/" + cfg.Node.GetCompleteAddress() + "/.storage/"
+	return cfg.Path + "/.storage/"
 }
 
 func getShardPath(cfg *Config) string {
-	return ".peercloud/" + cfg.Node.GetCompleteAddress() + "/.shards/"
+	return cfg.Path + "/.shards/"
 }
 
 ////  ///// ////

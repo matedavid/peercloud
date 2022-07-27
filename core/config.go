@@ -6,4 +6,5 @@ import (
 
 type Config struct {
 	Node network.Host
+	Path string
 }

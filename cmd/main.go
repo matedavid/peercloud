@@ -97,12 +97,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	path := ".peercloud/" + ip + ":" + fmt.Sprint(port)
+
 	cfg = &core.Config{
 		Node: network.Host{
 			Address: net.ParseIP(ip),
 			Port:    uint16(port),
 		},
+		Path: path,
 	}
+
 	tcpCfg := &core.Config{
 		Node: network.Host{
 			Address: net.ParseIP(ip),
