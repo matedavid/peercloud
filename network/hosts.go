@@ -55,11 +55,12 @@ func GetHosts(completeAddress string) ([]Host, error) {
 	var cleanHosts []Host
 	// Continue if string is empty
 	for _, host := range hosts {
-		if len(strings.Trim(host, " ")) == 0 {
+		trimmed := strings.Trim(host, " ")
+		if len(trimmed) == 0 {
 			continue
 		}
 
-		addressStr, portStr, err := net.SplitHostPort(host)
+		addressStr, portStr, err := net.SplitHostPort(trimmed)
 		if err != nil {
 			return nil, err
 		}

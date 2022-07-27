@@ -50,6 +50,7 @@ func Upload(filePath string, cfg *Config) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Store,
+			Host:        cfg.Node,
 			Payload:     uint32(len(payload.Write())),
 		}
 		err = header.Send(conn)
@@ -82,7 +83,7 @@ func Upload(filePath string, cfg *Config) error {
 	return nil
 }
 
-func Download(manifest *Manifest, outputPath string) error {
+func Download(manifest *Manifest, outputPath string, cfg *Config) error {
 	/*
 		key, err := crypto.GetRSAKey()
 		if err != nil {
@@ -108,6 +109,7 @@ func Download(manifest *Manifest, outputPath string) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Retrieve,
+			Host:        cfg.Node,
 			Payload:     64, // The length of hash in []byte
 		}
 		header.Send(conn)

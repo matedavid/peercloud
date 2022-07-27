@@ -33,7 +33,7 @@ func (l *RpcListener) Download(args *DownloadArgs, reply *string) error {
 		return err
 	}
 
-	err = core.Download(manifest, args.OutputPath)
+	err = core.Download(manifest, args.OutputPath, cfg)
 	if err != nil {
 		return err
 	}
@@ -56,20 +56,30 @@ func rpcServer(cfg *core.Config) {
 }
 
 func tcpServer(tcpCfg *core.Config) {
+	// Setup before listening
+	// hosts, err := network.GetHosts(cfg.Node.GetCompleteAddress())
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println(hosts)
+
 	listener, err := net.Listen("tcp", tcpCfg.Node.GetCompleteAddress())
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err)
 	}
 	defer listener.Close()
 
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatal(err)
 		}
 
 		mh := network.MessageHeader{}
 		mh.Recv(conn)
+
+		fmt.Println(mh)
 
 		switch mh.Command {
 		case network.Store: // Store
