@@ -50,7 +50,6 @@ func Upload(filePath string, cfg *Config) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Store,
-			Host:        cfg.Node,
 			Payload:     uint32(len(payload.Write())),
 		}
 		err = header.Send(conn)
@@ -109,7 +108,6 @@ func Download(manifest *Manifest, outputPath string, cfg *Config) error {
 		header := network.MessageHeader{
 			NetworkCode: network.MAIN_NETWORK_CODE,
 			Command:     network.Retrieve,
-			Host:        cfg.Node,
 			Payload:     64, // The length of hash in []byte
 		}
 		header.Send(conn)

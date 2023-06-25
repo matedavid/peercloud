@@ -25,9 +25,10 @@ type DownloadPayload struct {
 	Hash string
 }
 
-type VersionPayload struct {
+type GreetPayload struct {
 	Timestamp    int64
 	RandomNumber uint32
+	Host         Host
 }
 
 // GenericPayload
@@ -58,14 +59,14 @@ func (p *DownloadPayload) Read(data []byte) {
 	p.Hash = string(data[:64])
 }
 
-// VersionPayload
-func (p *VersionPayload) Write() []byte {
+// GreetPayload
+func (p *GreetPayload) Write() []byte {
 	bts := &bytes.Buffer{}
 	binary.Write(bts, binary.LittleEndian, p)
 
 	return bts.Bytes()
 }
 
-func (p *VersionPayload) Read(data []byte) {
+func (p *GreetPayload) Read(data []byte) {
 	binary.Read(bytes.NewReader(data), binary.LittleEndian, p)
 }
